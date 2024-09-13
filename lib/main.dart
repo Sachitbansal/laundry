@@ -1,9 +1,22 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+        apiKey: "AIzaSyBsH3nQcp5HsBYUtr_lsZEbP0SELoEv-4U",
+        authDomain: "laundry-tracking-44be5.firebaseapp.com",
+        projectId: "laundry-tracking-44be5",
+        storageBucket: "laundry-tracking-44be5.appspot.com",
+        messagingSenderId: "96292080853",
+        appId: "1:96292080853:web:3f4bd92721dfe45059265c",
+        measurementId: "G-186M3HBPGS"
+    )
+  ); // Initialize Firebase
+  runApp(const MyApp()); // Replace MyApp() with your main widget
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -13,21 +26,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -44,15 +42,82 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final FirebaseServices _firebaseServices = FirebaseServices();
+  List<Map<String, dynamic>> collectionData = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    print("Entered intistate");
+    super.initState();
+    fetchCollectionData();
+  }
+
+  // Function to fetch all documents from a Firestore collection
+  Future<void> fetchCollectionData() async {
+    try {
+      print("fetchCollectionData run ho gaya Step 2");
+      // Replace 'yourCollectionPath' with the path of your Firestore collection
+      List<Map<String, dynamic>> data =
+          await _firebaseServices.getCollectionData('Predictions');
+      setState(() {
+        collectionData = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching collection data: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Function to refresh data from the collection
+  Future<void> refreshData() async {
+    await fetchCollectionData(); // Call fetch function to refresh data
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Hello Hello"),
+        title: const Text("Hello Hello"),
       ),
-      body: Center(
-        child: Text("Hello Hello"),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : collectionData.isNotEmpty
+              ? ListView.builder(
+                  itemCount: collectionData.length,
+                  itemBuilder: (context, index) {
+                    final doc = collectionData[index];
+                    return Column(
+                      children: [
+                        TextButton(
+                          child: Text("Refresh"),
+                          onPressed: refreshData,
+                        ),
+                        Card(
+                          margin: const EdgeInsets.all(8.0),
+                          child: ListTile(
+                            title: Text('Document ${index + 1}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: doc.entries.map((entry) {
+                                return Text('${entry.key}: ${entry.value}');
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  })
+              : const Center(
+                  child: Text(
+                    'Error Displaying Data',
+                    style: TextStyle(fontSize: 18, color: Colors.red),
+                  ),
+                ),
     );
   }
 }
+
