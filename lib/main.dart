@@ -5,29 +5,38 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: const FirebaseOptions(
-        apiKey: "AIzaSyBsH3nQcp5HsBYUtr_lsZEbP0SELoEv-4U",
-        authDomain: "laundry-tracking-44be5.firebaseapp.com",
-        projectId: "laundry-tracking-44be5",
-        storageBucket: "laundry-tracking-44be5.appspot.com",
-        messagingSenderId: "96292080853",
-        appId: "1:96292080853:web:3f4bd92721dfe45059265c",
-        measurementId: "G-186M3HBPGS"
-    )
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyBsH3nQcp5HsBYUtr_lsZEbP0SELoEv-4U",
+          authDomain: "laundry-tracking-44be5.firebaseapp.com",
+          projectId: "laundry-tracking-44be5",
+          storageBucket: "laundry-tracking-44be5.appspot.com",
+          messagingSenderId: "96292080853",
+          appId: "1:96292080853:web:3f4bd92721dfe45059265c",
+          measurementId: "G-186M3HBPGS"
+      )
   ); // Initialize Firebase
   runApp(const MyApp()); // Replace MyApp() with your main widget
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Smart Laundry Management System',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primaryColor: Colors.blueAccent,
+        scaffoldBackgroundColor: Colors.grey[100],
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.blueAccent[700],
+          elevation: 2,
+          centerTitle: true,
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
       ),
       home: const MyHomePage(),
     );
@@ -48,18 +57,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    print("Entered intistate");
     super.initState();
     fetchCollectionData();
   }
 
-  // Function to fetch all documents from a Firestore collection
   Future<void> fetchCollectionData() async {
     try {
-      print("fetchCollectionData run ho gaya Step 2");
-      // Replace 'yourCollectionPath' with the path of your Firestore collection
-      List<Map<String, dynamic>> data =
-          await _firebaseServices.getCollectionData('Predictions');
+      List<Map<String, dynamic>> data = await _firebaseServices.getCollectionData('Predictions');
       setState(() {
         collectionData = data;
         isLoading = false;
@@ -72,52 +76,70 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Function to refresh data from the collection
   Future<void> refreshData() async {
-    await fetchCollectionData(); // Call fetch function to refresh data
+    await fetchCollectionData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Hello Hello"),
+        title: const Text("Smart Laundry Management System"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: refreshData,
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : collectionData.isNotEmpty
-              ? ListView.builder(
-                  itemCount: collectionData.length,
-                  itemBuilder: (context, index) {
-                    final doc = collectionData[index];
-                    return Column(
-                      children: [
-                        TextButton(
-                          child: Text("Refresh"),
-                          onPressed: refreshData,
-                        ),
-                        Card(
-                          margin: const EdgeInsets.all(8.0),
-                          child: ListTile(
-                            title: Text('Document ${index + 1}'),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: doc.entries.map((entry) {
-                                return Text('${entry.key}: ${entry.value}');
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  })
-              : const Center(
-                  child: Text(
-                    'Error Displaying Data',
-                    style: TextStyle(fontSize: 18, color: Colors.red),
+          ? ListView.builder(
+          padding: const EdgeInsets.all(10.0),
+          itemCount: collectionData.length,
+          itemBuilder: (context, index) {
+            final doc = collectionData[index];
+            return Card(
+              elevation: 4,
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16.0),
+                title: Text(
+                  'Machine ${index + 1}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.blueAccent,
                   ),
                 ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: doc.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(
+                        '${entry.key}: ${entry.value}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          })
+          : const Center(
+        child: Text(
+          'No Data Available',
+          style: TextStyle(fontSize: 18, color: Colors.redAccent),
+        ),
+      ),
     );
   }
 }
-
